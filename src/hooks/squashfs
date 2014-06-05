@@ -130,7 +130,7 @@ mount_handler_squashfs() {
 			launch_interactive_shell
 		fi
 
-		if [[ mountpoint -q "${imagedev_mountpoint}" ]]; then
+		if mountpoint -q "${imagedev_mountpoint}"; then
 			echo "Image source filesystem still mounted"
 			echo "Checking new root's fstab for final mount point image source"
 			if [ -f "$tab" ]; then
