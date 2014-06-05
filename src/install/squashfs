@@ -23,6 +23,7 @@ build() {
 	add_binary /usr/bin/wget
 	add_binary /usr/bin/pv
 	add_binary /usr/bin/find
+	add_binary /usr/bin/findmnt
 }
 
 help() {

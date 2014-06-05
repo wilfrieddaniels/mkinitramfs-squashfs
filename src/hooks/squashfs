@@ -18,9 +18,10 @@
 
 mount_handler_squashfs() {
 	mkdir /image;
-	local tmp device path imagepath imagedev_mountpoint
+	local tmp device path imagepath imagedev_mountpoint tab real_imagedev_mountpoint
 	imagepath="/image/root.squashfs"
 	imagedev_mountpoint="/image_source"
+    tab="${1}/etc/fstab"
 	case ${squashfs} in
 		http://* | https://* | ftp://* )
 			echo "Detected remote SquashFS source..."
@@ -99,7 +100,7 @@ mount_handler_squashfs() {
 				fi
 
 				if [[ ! -r "${path}" ]]; then
-					err "SquashFS image (${path}) is not fund (or it is not readable)"
+					err "SquashFS image (${path}) is not found (or it is not readable)"
 					echo "You are being dropped to a recovery shell"
 					echo " Try to move or link image to ${path}"
 					launch_interactive_shell
@@ -128,6 +129,24 @@ mount_handler_squashfs() {
 			err "Unable to mount SquashFS image..."
 			launch_interactive_shell
 		fi
+
+        if [[ mountpoint -q "${imagedev_mountpoint}" ]]; then
+            echo "Image source filesystem still mounted"
+            echo "Checking new root's fstab for final mount point image source"
+            if [ -f "$tab" ]; then
+                if real_imagedev_mountpoint=$(findmnt -snero target --tab-file="$tab" -S "$device"); then
+                    msg "Moving ${imagedev_mountpoint} to ${1}${real_imagedev_mountpoint}"
+                    mount --move "${imagedev_mountpoint}" "${1}${real_imagedev_mountpoint}"
+
+		            if [[ ! $? -eq 0 ]]; then
+			            err "Unable to move image source mount point..."
+                        echo "Check your fstab"
+                        msg "Continuing..."
+		            fi
+                fi
+            fi
+        fi
+
 	fi
 }
 

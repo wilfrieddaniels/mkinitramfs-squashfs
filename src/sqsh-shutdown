@@ -1,0 +1,18 @@
+#!/bin/ash
+
+for x in $(cat /proc/cmdline); do
+    case $x in
+        squashfs=*) squashfs="${x//squashfs=}"; break
+    esac
+done
+
+if [[ $squashfs ]]; then
+    device="${squashfs%%:*}"
+    if imagedev_mountpoint=$(findmnt -knero target -S "$device"); then
+        echo "Image source filesystem still mounted in oldroot, moving..."
+        mkdir /image_source
+        mount --move "${imagedev_mountpoint}" /image_source
+    fi
+fi
+
+exec /bin/systemd-shutdown "$@"
